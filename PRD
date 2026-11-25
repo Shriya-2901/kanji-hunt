@@ -1,0 +1,74 @@
+# Kanji Hunt — PRD
+
+**Version:** v0.1 draft, 25 Nov 2026 · **Owner:** me · **Next revision:** Sun 29 Nov, with Phase 1 data
+
+## Problem
+Tokyo surrounds a beginner learner with kanji they see every day but can't read. Google Lens helps you read a sign once. Nothing makes sure you can read it the next time you pass it. List-based SRS apps teach words disconnected from where you actually met them.
+
+## User
+Primary user: me. I'm a beginner learner who commutes daily on the Tokyo Metro **Tozai** and **Yurakucho** lines. Both run mostly underground, so signal is patchy. Trains are often crush-loaded: one hand is on a strap, there's no audio, and I get 30–90 seconds between stations.
+
+## Core loop
+1. Photograph kanji in a public space (station sign, menu, notice).
+2. Crop the word on the device.
+3. Send only the crop to the AI, which returns the text, reading and meaning.
+4. Check the result against JMdict (and JMnedict for place and station names).
+5. Create a card with the full photo, which never leaves the phone, as a memory hook. Mark it **verified**, **flagged** (AI and dictionary disagree) or **not found**.
+6. Show the catch reply, e.g. "New catch! 駅 — 48 of 2,136". The count is the new Jōyō kanji contained in the caught word.
+7. Review in a one-thumb FSRS swipe feed that works offline. Sessions are capped, and there is no backlog counter.
+
+## v1 scope (ship by Sun 27 Dec)
+- Swipe feed with FSRS scheduling, as an offline PWA.
+- Camera capture and on-device crop.
+- AI call through one serverless function, so the API key stays off the client.
+- Dictionary verification with visible flags.
+- Catch reply.
+- `eval/` script, plus error rates published in the README.
+- Local usage log (sessions and dates).
+
+## Non-goals for v1
+- **Deferred to v2:** collection page, rarity, location sets, map.
+- **Out of scope:** WhatsApp/LINE, accounts or sync, audio, handwriting, grammar, cloud photo storage, native apps.
+
+## Success metrics
+**Usage**
+- Used on 10+ commutes by 27 Dec, measured from the usage log.
+- Median session length of 30–90 s.
+
+**Accuracy** (provisional, to be revised 29 Nov)
+- A card is *correct* when the selected word, its reading in context and its core meaning are all right.
+- At least 80% of test photos correct end to end (n ≥ 30 by 27 Dec).
+- At least 50% of incorrect cards are flagged.
+- Error rate on verified cards is published.
+
+**Checkpoint (27 Dec):** continue if at least 2 of 3 are true:
+- used on 10+ commutes;
+- most test photos are correct;
+- I'm still interested.
+
+## Constraints
+- **Time:** about 7 h/week, never below 3, own time and laptop only.
+- **Cost:** free tiers only.
+- **Privacy:** photos stay on the device. Only crops of public text are sent to the AI. No work or client material, ever.
+- **Licences:** JMdict, JMnedict and KANJIDIC are EDRDG data under CC BY-SA. Attribution goes in the app and the README.
+
+## Stack
+- **App:** Vite + plain JS PWA, Dexie (IndexedDB), ts-fsrs.
+- **Backend:** Cloudflare Pages and one Worker.
+- **AI and dictionary:** Gemini Flash free tier; trimmed JMdict in D1.
+- **Eval:** Python + DuckDB.
+
+## Risks and mitigations
+| Risk | Mitigation |
+|---|---|
+| Scene OCR fails on vertical or stylised text, glare and motion blur | Tight on-device crop; compare engines on real photos |
+| Station names have irregular readings (高田馬場 = たかだのばば) and aren't in JMdict, so they get falsely flagged | Add JMnedict and a Tokyo Metro station list |
+| Free-tier quota or data-use terms change | Send crops only; the provider sits behind one Worker function, so it can be swapped |
+| I over-plan instead of building | This PRD stays one page; it changes only when new data comes in |
+
+## Open questions
+| Question | Answered by |
+|---|---|
+| Is on-device Tesseract accurate enough, or is the AI required? | OCR comparison, 29 Nov |
+| Are the accuracy targets realistic? | 10-photo baseline, 29 Nov |
+| What session cap feels right (starting at 15)? | Phase 2 dogfooding, 6 Dec |
